@@ -43,13 +43,13 @@ class Trainer
      * @var Collection<int, Feedback>
      */
     #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'tainer')]
-    private Collection $feedback;
+    private Collection $feedbacks;
 
     public function __construct()
     {
         $this->workoutPrograms = new ArrayCollection();
         $this->workoutSessions = new ArrayCollection();
-        $this->feedback = new ArrayCollection();
+        $this->feedbacks = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -177,25 +177,25 @@ class Trainer
      */
     public function getFeedback(): Collection
     {
-        return $this->feedback;
+        return $this->feedbacks;
     }
 
-    public function addFeedback(Feedback $feedback): static
+    public function addFeedback(Feedback $feedbacks): static
     {
-        if (!$this->feedback->contains($feedback)) {
-            $this->feedback->add($feedback);
-            $feedback->setTainer($this);
+        if (!$this->feedbacks->contains($feedbacks)) {
+            $this->feedbacks->add($feedbacks);
+            $feedbacks->setTainer($this);
         }
 
         return $this;
     }
 
-    public function removeFeedback(Feedback $feedback): static
+    public function removeFeedback(Feedback $feedbacks): static
     {
-        if ($this->feedback->removeElement($feedback)) {
+        if ($this->feedbacks->removeElement($feedbacks)) {
             // set the owning side to null (unless already changed)
-            if ($feedback->getTainer() === $this) {
-                $feedback->setTainer(null);
+            if ($feedbacks->getTainer() === $this) {
+                $feedbacks->setTainer(null);
             }
         }
 

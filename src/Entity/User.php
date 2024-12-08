@@ -47,11 +47,15 @@ class User
     #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'user')]
     private Collection $bookings;
 
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    private ?WorkoutSession $workoutSessions = null;
+
     public function __construct()
     {
         $this->payments = new ArrayCollection();
         $this->feedback = new ArrayCollection();
         $this->bookings = new ArrayCollection();
+        $this->workoutSessions = new ArrayCollection();
     }
 
     #[ORM\ManyToOne(inversedBy: 'user')]
@@ -208,6 +212,19 @@ class User
                 $booking->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+
+    public function getWorkoutSessions(): ?WorkoutSession
+    {
+        return $this->workoutSessions;
+    }
+
+    public function setWorkoutSessions(?WorkoutSession $workoutSessions): static
+    {
+        $this->workoutSessions = $workoutSessions;
 
         return $this;
     }

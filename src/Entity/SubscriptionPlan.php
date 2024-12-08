@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\SubscriptionPlanRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -22,6 +24,17 @@ class SubscriptionPlan
 
     #[ORM\Column]
     private ?int $duration = null;
+
+    /**
+     * @var Collection<int, Membership>
+     */
+    #[ORM\OneToMany(targetEntity: Membership::class, mappedBy: 'subscriptionPlan')]
+    private Collection $membership;
+
+    public function __construct()
+    {
+        $this->membership = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -67,6 +80,36 @@ class SubscriptionPlan
     public function setDuration(int $duration): static
     {
         $this->duration = $duration;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Membership>
+     */
+    public function getMembership(): Collection
+    {
+        return $this->membership;
+    }
+
+    public function addMembership(Membership $membership): static
+    {
+        if (!$this->membership->contains($membership)) {
+            $this->membership->add($membership);
+            $membership->setSubscriptionPlan($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMembership(Membership $membership): static
+    {
+        if ($this->membership->removeElement($membership)) {
+            // set the owning side to null (unless already changed)
+            if ($membership->getSubscriptionPlan() === $this) {
+                $membership->setSubscriptionPlan(null);
+            }
+        }
 
         return $this;
     }

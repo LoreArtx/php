@@ -16,11 +16,11 @@ class Booking
     #[ORM\ManyToOne(inversedBy: 'bookings')]
     private ?User $user = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    private ?WorkoutSession $session = null;
-
     #[ORM\Column(length: 255)]
     private ?string $status = null;
+
+    #[ORM\ManyToOne(inversedBy: 'bookings')]
+    private ?WorkoutSession $workoutSession = null;
 
     public function getId(): ?int
     {
@@ -46,18 +46,6 @@ class Booking
         return $this;
     }
 
-    public function getSession(): ?WorkoutSession
-    {
-        return $this->session;
-    }
-
-    public function setSession(?WorkoutSession $session): static
-    {
-        $this->session = $session;
-
-        return $this;
-    }
-
         public function getStatus(): ?string
     {
         return $this->status;
@@ -66,6 +54,18 @@ class Booking
     public function setStatus(string $status): static
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getWorkoutSession(): ?WorkoutSession
+    {
+        return $this->workoutSession;
+    }
+
+    public function setWorkoutSession(?WorkoutSession $workoutSession): static
+    {
+        $this->workoutSession = $workoutSession;
 
         return $this;
     }

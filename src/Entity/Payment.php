@@ -26,6 +26,9 @@ class Payment
     #[ORM\Column(length: 255)]
     private ?string $status = null;
 
+    #[ORM\ManyToOne(inversedBy: 'payments')]
+    private ?Membership $membership = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -82,6 +85,18 @@ class Payment
     public function setStatus(string $status): static
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getMembership(): ?Membership
+    {
+        return $this->membership;
+    }
+
+    public function setMembership(?Membership $membership): static
+    {
+        $this->membership = $membership;
 
         return $this;
     }
