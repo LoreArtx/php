@@ -55,7 +55,6 @@ class User
         $this->payments = new ArrayCollection();
         $this->feedback = new ArrayCollection();
         $this->bookings = new ArrayCollection();
-        $this->workoutSessions = new ArrayCollection();
     }
 
     #[ORM\ManyToOne(inversedBy: 'user')]

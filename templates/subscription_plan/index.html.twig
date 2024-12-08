@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}SubscriptionPlan index{% endblock %}
+
+{% block body %}
+    <h1>SubscriptionPlan index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Duration</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for subscription_plan in subscription_plans %}
+            <tr>
+                <td>{{ subscription_plan.id }}</td>
+                <td>{{ subscription_plan.name }}</td>
+                <td>{{ subscription_plan.price }}</td>
+                <td>{{ subscription_plan.duration }}</td>
+                <td>
+                    <a href="{{ path('app_subscription_plan_show', {'id': subscription_plan.id}) }}">show</a>
+                    <a href="{{ path('app_subscription_plan_edit', {'id': subscription_plan.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_subscription_plan_new') }}">Create new</a>
+{% endblock %}

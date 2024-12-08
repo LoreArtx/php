@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}WorkoutSession index{% endblock %}
+
+{% block body %}
+    <h1>WorkoutSession index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Star_time</th>
+                <th>End_time</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for workout_session in workout_sessions %}
+            <tr>
+                <td>{{ workout_session.id }}</td>
+                <td>{{ workout_session.starTime ? workout_session.starTime|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ workout_session.endTime ? workout_session.endTime|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_workout_session_show', {'id': workout_session.id}) }}">show</a>
+                    <a href="{{ path('app_workout_session_edit', {'id': workout_session.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_workout_session_new') }}">Create new</a>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}SubscriptionPlan{% endblock %}
+
+{% block body %}
+    <h1>SubscriptionPlan</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ subscription_plan.id }}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ subscription_plan.name }}</td>
+            </tr>
+            <tr>
+                <th>Price</th>
+                <td>{{ subscription_plan.price }}</td>
+            </tr>
+            <tr>
+                <th>Duration</th>
+                <td>{{ subscription_plan.duration }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_subscription_plan_index') }}">back to list</a>
+
+    <a href="{{ path('app_subscription_plan_edit', {'id': subscription_plan.id}) }}">edit</a>
+
+    {{ include('subscription_plan/_delete_form.html.twig') }}
+{% endblock %}
