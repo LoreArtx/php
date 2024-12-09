@@ -5,21 +5,25 @@ namespace App\Controller;
 use App\Service\FeedbackService;
 use App\Entity\Feedback;
 use App\Form\FeedbackType;
+use App\Service\FeedbackValidatorService;
 use App\Repository\FeedbackRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/feedback')]
 final class FeedbackController extends AbstractController
 {
     private FeedbackService $feedbackService;
-
-    public function __construct(FeedbackService $feedbackService)
+    private FeedbackValidatorService $feedbackValidatorService;
+    public function __construct(FeedbackService $feedbackService, FeedbackValidatorService $feedbackValidatorService)
     {
         $this->feedbackService = $feedbackService;
+        $this->feedbackValidatorService = $feedbackValidatorService;
+
     }
 
     #[Route(name: 'app_feedback_index', methods: ['GET'])]
@@ -38,18 +42,29 @@ final class FeedbackController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $data = $form->getData();
+            $validationErrors = $this->feedbackValidatorService->validateFeedbackData([
+                'user'=>$feedback->getUser()->getId(),
+                'trainer' => $feedback->getTrainer()->getId(),
+                'rating' => $feedback->getRating(),
+                'comment' => $feedback->getComment(),
+            ]);
 
-            $this->feedbackService->createFeedback(
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+
+            if($form->isValid())
+            {
+                $this->feedbackService->createFeedback(
                     $feedback->getUser()->getId(),
-                    $feedback->getTainer()->getId(),
+                    $feedback->getTrainer()->getId(),
                     $feedback->getRating(),
                     $feedback->getComment()
                 );
 
                 return $this->redirectToRoute('app_feedback_index');
+            }
 
-            $this->addFlash('error', 'Invalid User or Trainer selected.');
         }
 
         return $this->render('feedback/new.html.twig', [

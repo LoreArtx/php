@@ -5,21 +5,25 @@ namespace App\Controller;
 use App\Entity\Equipment;
 use App\Form\EquipmentType;
 use App\Service\EquipmentService;
+use App\Service\EquipmentValidatorService;
 use App\Repository\EquipmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/equipment')]
 final class EquipmentController extends AbstractController
 {
     private EquipmentService $equipmentService;
+    private EquipmentValidatorService $equipmentValidator;
 
-    public function __construct(EquipmentService $equipmentService)
+    public function __construct(EquipmentService $equipmentService, EquipmentValidatorService $equipmentValidator)
     {
         $this->equipmentService = $equipmentService;
+        $this->equipmentValidator = $equipmentValidator;
     }
     
     #[Route(name: 'app_equipment_index', methods: ['GET'])]
@@ -38,14 +42,27 @@ final class EquipmentController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->equipmentService->createEquipment(
-            $equipment->getName(),
-            $equipment->getType(),
-            $equipment->getQuantity(),
-            $equipment->getStatus()
-        );
+            $validationErrors = $this->equipmentValidator->validateEquipment([
+                'name'=>$equipment->getName(),
+                'type' => $equipment->getType(),
+                'quantity' => $equipment->getQuantity(),
+                'status' => $equipment->getStatus(),
+            ]);
 
-            return $this->redirectToRoute('app_equipment_index', [], Response::HTTP_SEE_OTHER);
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+
+            if($form->isValid()){
+                $this->equipmentService->createEquipment(
+                $equipment->getName(),
+                $equipment->getType(),
+                $equipment->getQuantity(),
+                $equipment->getStatus());
+
+                return $this->redirectToRoute('app_equipment_index', [], Response::HTTP_SEE_OTHER);
+            }
+
         }
 
         return $this->render('equipment/new.html.twig', [

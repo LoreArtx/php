@@ -5,19 +5,23 @@ namespace App\Controller;
 use App\Entity\WorkoutSession;
 use App\Form\WorkoutSessionType;
 use App\Service\WorkoutSessionService;
+use App\Service\WorkoutSessionValidatorService;
 use App\Repository\WorkoutSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/workout/session')]
 final class WorkoutSessionController extends AbstractController
 {
     private WorkoutSessionService $workoutSessionService;
-    public function __construct(WorkoutSessionService $workoutSessionService){
+    private WorkoutSessionValidatorService $workoutSessionValidatorService;
+    public function __construct(WorkoutSessionService $workoutSessionService, WorkoutSessionValidatorService $workoutSessionValidatorService){
         $this->workoutSessionService = $workoutSessionService;
+        $this->workoutSessionValidatorService = $workoutSessionValidatorService;
     }
 
     #[Route(name: 'app_workout_session_index', methods: ['GET'])]
@@ -36,14 +40,27 @@ final class WorkoutSessionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->workoutSessionService->createWorkoutSession(
-                $workoutSession->getProgram()->getId(),
-                $workoutSession->getTrainer()->getId(),
-                $workoutSession->getStartTime(),
-                $workoutSession->getEndTime()
-            );
+            $validationErrors = $this->workoutSessionValidatorService->validateWorkoutSession([
+                'program' => $workoutSession->getProgram()->getId(),
+                'trainer' => $workoutSession->getTrainer()->getId(),
+                'start_time' => $workoutSession->getStartTime(),
+                'end_time' => $workoutSession->getEndTime(),
+            ]);
 
-            return $this->redirectToRoute('app_workout_session_index', [], Response::HTTP_SEE_OTHER);
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+            
+            if($form->isValid()){
+                $this->workoutSessionService->createWorkoutSession(
+                    $workoutSession->getProgram()->getId(),
+                    $workoutSession->getTrainer()->getId(),
+                    $workoutSession->getStartTime(),
+                    $workoutSession->getEndTime()
+                );
+
+                return $this->redirectToRoute('app_workout_session_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
 
         return $this->render('workout_session/new.html.twig', [

@@ -5,21 +5,25 @@ namespace App\Controller;
 use App\Entity\WorkoutProgram;
 use App\Service\WorkoutProgramService;
 use App\Form\WorkoutProgramType;
+use App\Service\WorkoutProgramValidatorService;
 use App\Repository\WorkoutProgramRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/workout/program')]
 final class WorkoutProgramController extends AbstractController
 {
     private WorkoutProgramService $workoutProgramService;
+    private WorkoutProgramValidatorService $workoutProgramValidatorService;
 
-    public function __construct(WorkoutProgramService $workoutProgramService)
+    public function __construct(WorkoutProgramService $workoutProgramService, WorkoutProgramValidatorService $workoutProgramValidatorService)
     {
         $this->workoutProgramService = $workoutProgramService;
+        $this->workoutProgramValidatorService = $workoutProgramValidatorService;
     }
 
     #[Route(name: 'app_workout_program_index', methods: ['GET'])]
@@ -38,14 +42,29 @@ final class WorkoutProgramController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->workoutProgramService->createWorkoutProgram(
-                $workoutProgram->getName(),
-                $workoutProgram->getDescription(),
-                $workoutProgram->getDuration(),
-                $workoutProgram->getTrainer()->getId()
-            );
 
-            return $this->redirectToRoute('app_workout_program_index', [], Response::HTTP_SEE_OTHER);
+            $validationErrors = $this->workoutProgramValidatorService->validateWorkoutProgramData([
+                'name' => $workoutProgram->getName(),
+                'description' => $workoutProgram->getDescription(),
+                'duration' => $workoutProgram->getDuration(),
+                'trainer' => $workoutProgram->getTrainer()->getId(),
+            ]);
+
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+            
+            if($form->isValid())
+            {
+                $this->workoutProgramService->createWorkoutProgram(
+                    $workoutProgram->getName(),
+                    $workoutProgram->getDescription(),
+                    $workoutProgram->getDuration(),
+                    $workoutProgram->getTrainer()->getId()
+                );
+
+                return $this->redirectToRoute('app_workout_program_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
 
         return $this->render('workout_program/new.html.twig', [

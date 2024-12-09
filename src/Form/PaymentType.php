@@ -9,6 +9,7 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 class PaymentType extends AbstractType
 {
@@ -19,7 +20,13 @@ class PaymentType extends AbstractType
             ->add('payment_date', null, [
                 'widget' => 'single_text',
             ])
-            ->add('status')
+            ->add('status', ChoiceType::class, [
+                'choices' => [
+                    'Pending' => 'pending',
+                    'Completed' => 'completed',
+                    'Failed' => 'failed',
+                ]
+            ])
             ->add('user', EntityType::class, [
                 'class' => User::class,
                 'choice_label' => 'id',

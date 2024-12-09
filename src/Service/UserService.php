@@ -14,14 +14,17 @@ class UserService
         $this->entityManager = $entityManager;
     }
 
-    public function createUser(string $name, string $email, string $phone, string $role): User
+    public function createUser(string $name, string $email, string $password, string $phone, string $role): User
     {
         $user = new User();
 
         $user->setName($name)
             ->setEmail($email)
+            ->setPassword($password)
             ->setPhone($phone)
             ->setRole($role);
+
+
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();

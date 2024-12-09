@@ -21,7 +21,7 @@ class FeedbackType extends AbstractType
                 'class' => User::class,
                 'choice_label' => 'id',
             ])
-            ->add('tainer', EntityType::class, [
+            ->add('trainer', EntityType::class, [
                 'class' => Trainer::class,
                 'choice_label' => 'id',
             ])

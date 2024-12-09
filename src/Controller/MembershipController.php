@@ -5,19 +5,25 @@ namespace App\Controller;
 use App\Entity\Membership;
 use App\Form\MembershipType;
 use App\Service\MembershipService;
+use App\Service\MembershipValidatorService;
 use App\Repository\MembershipRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/membership')]
 final class MembershipController extends AbstractController
 {
     private MembershipService $membershipService;
-    public function __construct(MembershipService $membershipService){
+    private MembershipValidatorService $membershipValidatorService;
+
+    public function __construct(MembershipService $membershipService, MembershipValidatorService $membershipValidatorService)
+    {
         $this->membershipService = $membershipService;
+        $this->membershipValidatorService = $membershipValidatorService;
     }
     
     #[Route(name: 'app_membership_index', methods: ['GET'])]
@@ -36,14 +42,28 @@ final class MembershipController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->membershipService->createMembership(
-                $membership->getUser()->getId(),
-                $membership->getSubscription()->getId(),
-                $membership->getStartDate(),
-                $membership->getEndDate()
-            );
+            $validationErrors = $this->membershipValidatorService->validateMembershipData([
+                'user' => $membership->getUser()->getId(),
+                'subscription_plan' => $membership->getSubscription()->getId(),
+                'start_date' => $membership->getStartDate(),
+                'end_date' => $membership->getEndDate(),
+            ]);
 
-            return $this->redirectToRoute('app_membership_index', [], Response::HTTP_SEE_OTHER);
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+
+            if($form->isValid())
+            {
+                $this->membershipService->createMembership(
+                    $membership->getUser()->getId(),
+                    $membership->getSubscription()->getId(),
+                    $membership->getStartDate(),
+                    $membership->getEndDate()
+                );
+
+                return $this->redirectToRoute('app_membership_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
 
         return $this->render('membership/new.html.twig', [

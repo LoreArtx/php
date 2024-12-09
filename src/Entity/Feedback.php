@@ -18,7 +18,7 @@ class Feedback
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'feedback')]
-    private ?Trainer $tainer = null;
+    private ?Trainer $trainer = null;
 
     #[ORM\Column]
     private ?int $rating = null;
@@ -50,14 +50,14 @@ class Feedback
         return $this;
     }
 
-    public function getTainer(): ?Trainer
+    public function gettrainer(): ?Trainer
     {
-        return $this->tainer;
+        return $this->trainer;
     }
 
-    public function setTainer(?Trainer $tainer): static
+    public function settrainer(?Trainer $trainer): static
     {
-        $this->tainer = $tainer;
+        $this->trainer = $trainer;
 
         return $this;
     }

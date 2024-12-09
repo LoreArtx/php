@@ -6,20 +6,24 @@ use App\Entity\Payment;
 use App\Form\PaymentType;
 use App\Service\PaymentService;
 use App\Repository\PaymentRepository;
+use App\Service\PaymentValidatorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/payment')]
 final class PaymentController extends AbstractController
 {
     private PaymentService $paymentService;
+    private PaymentValidatorService $paymentValidatorService;
 
-    public function __construct(PaymentService $paymentService)
+    public function __construct(PaymentService $paymentService, PaymentValidatorService $paymentValidatorService)
     {
         $this->paymentService = $paymentService;
+        $this->paymentValidatorService = $paymentValidatorService;
     }
 
     #[Route(name: 'app_payment_index', methods: ['GET'])]
@@ -38,15 +42,31 @@ final class PaymentController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->paymentService->createPayment(
-                $payment->getUser()->getId(),
-                $payment->getAmount(),
-                $payment->getPaymentDate(),
-                $payment->getStatus(),
-                $payment->getMembership()->getId()
-            );
+            
+            $validationErrors = $this->paymentValidatorService->validatePaymentData([
+                "user"=>$payment->getUser()->getId(),
+                'membership' => $payment->getMembership()->getId(),
+                'amount' => $payment->getAmount(),
+                'payment_date' => $payment->getPaymentDate(),
+                'status' => $payment->getStatus(),
+            ]);
 
-            return $this->redirectToRoute('app_payment_index', [], Response::HTTP_SEE_OTHER);
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+            
+            if($form->isValid())
+            {
+                $this->paymentService->createPayment(
+                    $payment->getUser()->getId(),
+                    $payment->getAmount(),
+                    $payment->getPaymentDate(),
+                    $payment->getStatus(),
+                    $payment->getMembership()->getId()
+                );
+
+                return $this->redirectToRoute('app_payment_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
 
         return $this->render('payment/new.html.twig', [

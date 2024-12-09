@@ -42,7 +42,7 @@ class Trainer
     /**
      * @var Collection<int, Feedback>
      */
-    #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'tainer')]
+    #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'trainer')]
     private Collection $feedbacks;
 
     #[ORM\Column(length: 255)]
@@ -187,7 +187,7 @@ class Trainer
     {
         if (!$this->feedbacks->contains($feedbacks)) {
             $this->feedbacks->add($feedbacks);
-            $feedbacks->setTainer($this);
+            $feedbacks->setTrainer($this);
         }
 
         return $this;
@@ -197,8 +197,8 @@ class Trainer
     {
         if ($this->feedbacks->removeElement($feedbacks)) {
             // set the owning side to null (unless already changed)
-            if ($feedbacks->getTainer() === $this) {
-                $feedbacks->setTainer(null);
+            if ($feedbacks->getTrainer() === $this) {
+                $feedbacks->setTrainer(null);
             }
         }
 

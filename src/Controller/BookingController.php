@@ -7,20 +7,24 @@ use App\Form\BookingType;
 use App\Repository\BookingRepository;
 use App\Entity\WorkoutSession;
 use App\Service\BookingService;
+use App\Service\BookingValidatorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/booking')]
 final class BookingController extends AbstractController
 {
     private BookingService $bookingService;
+    private BookingValidatorService $bookingValidatorService;
 
-    public function __construct(BookingService $bookingService)
+    public function __construct(BookingService $bookingService, BookingValidatorService $bookingValidatorService)
     {
         $this->bookingService = $bookingService;
+        $this->bookingValidatorService = $bookingValidatorService;
     }
 
     #[Route(name: 'app_booking_index', methods: ['GET'])]
@@ -39,13 +43,27 @@ final class BookingController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->bookingService->createBooking(
-                $booking->getUser()->getId(),
-                 $booking->getWorkoutSession()->getId(),
-                  $booking->getStatus()
-            );
+            
+            $validationErrors = $this->bookingValidatorService->validateBooking([
+                'userId'=>$booking->getUser()->getId(),
+                'workoutSessionId' => $booking->getWorkoutSession()->getId(),
+                'status' => $booking->getStatus(),
+            ]);
 
-            return $this->redirectToRoute('app_booking_index', [], Response::HTTP_SEE_OTHER);
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+
+            if($form->isValid())
+            {
+                $this->bookingService->createBooking(
+                    $booking->getUser()->getId(),
+                    $booking->getWorkoutSession()->getId(),
+                    $booking->getStatus()
+                );
+
+                return $this->redirectToRoute('app_booking_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
 
         return $this->render('booking/new.html.twig', [

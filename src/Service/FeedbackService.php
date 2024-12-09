@@ -38,7 +38,7 @@ class FeedbackService
 
         if ($user && $trainer) {
             $feedback->setUser($user)
-            ->setTainer($trainer)
+            ->setTrainer($trainer)
             ->setRating($rating)
             ->setComment($comment);
 

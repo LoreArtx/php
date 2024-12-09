@@ -5,21 +5,25 @@ namespace App\Controller;
 use App\Service\TrainerService;
 use App\Entity\Trainer;
 use App\Form\TrainerType;
+use App\Service\TrainerValidatorService;
 use App\Repository\TrainerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/trainer')]
 final class TrainerController extends AbstractController
 {
     private TrainerService $trainerService;
+    private TrainerValidatorService $trainerValidatorService;
 
-    public function __construct(TrainerService $trainerService)
+    public function __construct(TrainerService $trainerService,TrainerValidatorService $trainerValidatorService)
     {
         $this->trainerService = $trainerService;
+        $this->trainerValidatorService = $trainerValidatorService;
     }
 
     #[Route(name: 'app_trainer_index', methods: ['GET'])]
@@ -38,6 +42,20 @@ final class TrainerController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $validationErrors = $this->trainerValidatorService->validateTrainerData([
+                "name"=>$trainer->getName(),
+                'specialization' => $trainer->getSpecialization(),
+                'experience' => $trainer->getExperience(),
+                'phone' => $trainer->getPhone(),
+                'email' => $trainer->getEmail(),
+            ]);
+
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+
+
+        if ($form->isValid()) {
             $this->trainerService->createTrainer(
                 $trainer->getName(),
                 $trainer->getSpecialization(),
@@ -47,6 +65,8 @@ final class TrainerController extends AbstractController
             );
 
             return $this->redirectToRoute('app_trainer_index');
+        }
+
         }
 
         return $this->render('trainer/new.html.twig', [

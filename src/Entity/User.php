@@ -50,6 +50,9 @@ class User
     #[ORM\ManyToOne(inversedBy: 'users')]
     private ?WorkoutSession $workoutSessions = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $password = null;
+
     public function __construct()
     {
         $this->payments = new ArrayCollection();
@@ -224,6 +227,18 @@ class User
     public function setWorkoutSessions(?WorkoutSession $workoutSessions): static
     {
         $this->workoutSessions = $workoutSessions;
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
 
         return $this;
     }

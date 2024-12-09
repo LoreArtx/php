@@ -5,21 +5,25 @@ namespace App\Controller;
 use App\Entity\SubscriptionPlan;
 use App\Form\SubscriptionPlanType;
 use App\Service\SubscriptionPlanService;
+use App\Service\SubscriptionPlanValidatorService;
 use App\Repository\SubscriptionPlanRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/subscription/plan')]
 final class SubscriptionPlanController extends AbstractController
 {
     private SubscriptionPlanService $subscriptionPlanService;
+    private SubscriptionPlanValidatorService $subscriptionPlanValidatorService;
 
-    public function __construct(SubscriptionPlanService $subscriptionPlanService)
+    public function __construct(SubscriptionPlanService $subscriptionPlanService, SubscriptionPlanValidatorService $subscriptionPlanValidatorService)
     {
         $this->subscriptionPlanService = $subscriptionPlanService;
+        $this->subscriptionPlanValidatorService = $subscriptionPlanValidatorService;
     }
 
     #[Route(name: 'app_subscription_plan_index', methods: ['GET'])]
@@ -38,11 +42,24 @@ final class SubscriptionPlanController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->subscriptionPlanService->createSubscriptionPlan(
-            $subscriptionPlan->getName(),
-            $subscriptionPlan->getPrice(),
-            $subscriptionPlan->getDuration() );
-            return $this->redirectToRoute('app_subscription_plan_index', [], Response::HTTP_SEE_OTHER);
+            $validationErrors = $this->subscriptionPlanValidatorService->validateSubscriptionPlanData([
+                'name' => $subscriptionPlan->getName(),
+                'price' => $subscriptionPlan->getPrice(),
+                'duration' => $subscriptionPlan->getDuration(),
+            ]);
+
+            foreach ($validationErrors as $field => $error) {
+                $form->get($field)?->addError(new FormError($error));
+            }
+            
+            if($form->isValid())
+            {
+                $this->subscriptionPlanService->createSubscriptionPlan(
+                $subscriptionPlan->getName(),
+                $subscriptionPlan->getPrice(),
+                $subscriptionPlan->getDuration() );
+                return $this->redirectToRoute('app_subscription_plan_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
 
         return $this->render('subscription_plan/new.html.twig', [

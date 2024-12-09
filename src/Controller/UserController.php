@@ -6,20 +6,24 @@ use App\Entity\User;
 use App\Form\UserType;
 use App\Service\UserService;
 use App\Repository\UserRepository;
+use App\Service\UserValidatorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Form\FormError;
 
 #[Route('/user')]
 final class UserController extends AbstractController
 {
     private UserService $userService;
+    private UserValidatorService $userValidatorService;
 
-    public function __construct(UserService $userService)
+    public function __construct(UserService $userService, UserValidatorService $userValidatorService)
     {
         $this->userService = $userService;
+        $this->userValidatorService = $userValidatorService;
     }
 
     #[Route(name: 'app_user_index', methods: ['GET'])]
@@ -36,16 +40,33 @@ final class UserController extends AbstractController
         $user = new User();
         $form = $this->createForm(UserType::class, $user);
         $form->handleRequest($request);
+        
+        if ($form->isSubmitted() && $form->isValid()) {
 
-         if ($form->isSubmitted() && $form->isValid()) {
+        $validationErrors = $this->userValidatorService->validateUserData([
+            'name' => $user->getName(),
+            'email' => $user->getEmail(),
+            'password' => $user->getPassword(),
+            'phone' => $user->getPhone(),
+            'role' => $user->getRole(),
+        ]);
+
+        if (!empty($validationErrors)) {
+            foreach ($validationErrors as $field => $error) {
+                $cleanField = trim($field, '[]');
+                $form->get($cleanField)?->addError(new FormError($error));
+            }
+        }else{
             $this->userService->createUser(
-                $user->getName(),
-                $user->getEmail(),
-                $user->getPhone(),
-                $user->getRole()
-            );
-
+                    $user->getName(),
+                    $user->getEmail(),
+                    $user->getPassword(),
+                    $user->getPhone(),
+                    $user->getRole()
+                );
             return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+        }
+          
         }
 
         return $this->render('user/new.html.twig', [

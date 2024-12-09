@@ -6,10 +6,21 @@
 parameters:
 
 services:
+    App\Service\UserValidatorService: ~
+    App\Service\TrainerValidatorService: ~
+    App\Service\EquipmentValidatorService: ~
+    App\Service\FeedbackValidatorService: ~
+    App\Service\PaymentValidatorService: ~
+    App\Service\SubscriptionPlanValidatorService : ~
+    App\Service\MembershipValidatorService: ~
+    App\Service\WorkoutProgramValidatorService: ~
+    App\Service\WorkoutSessionValidatorService: ~
+    App\Service\BookingValidatorService: ~
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
