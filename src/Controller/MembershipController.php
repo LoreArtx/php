@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Membership;
 use App\Form\MembershipType;
+use App\Service\MembershipService;
 use App\Repository\MembershipRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,6 +15,11 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/membership')]
 final class MembershipController extends AbstractController
 {
+    private MembershipService $membershipService;
+    public function __construct(MembershipService $membershipService){
+        $this->membershipService = $membershipService;
+    }
+    
     #[Route(name: 'app_membership_index', methods: ['GET'])]
     public function index(MembershipRepository $membershipRepository): Response
     {
@@ -30,8 +36,12 @@ final class MembershipController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($membership);
-            $entityManager->flush();
+            $this->membershipService->createMembership(
+                $membership->getUser()->getId(),
+                $membership->getSubscription()->getId(),
+                $membership->getStartDate(),
+                $membership->getEndDate()
+            );
 
             return $this->redirectToRoute('app_membership_index', [], Response::HTTP_SEE_OTHER);
         }

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\TrainerService;
 use App\Entity\Trainer;
 use App\Form\TrainerType;
 use App\Repository\TrainerRepository;
@@ -14,6 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/trainer')]
 final class TrainerController extends AbstractController
 {
+    private TrainerService $trainerService;
+
+    public function __construct(TrainerService $trainerService)
+    {
+        $this->trainerService = $trainerService;
+    }
+
     #[Route(name: 'app_trainer_index', methods: ['GET'])]
     public function index(TrainerRepository $trainerRepository): Response
     {
@@ -30,10 +38,15 @@ final class TrainerController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($trainer);
-            $entityManager->flush();
+            $this->trainerService->createTrainer(
+                $trainer->getName(),
+                $trainer->getSpecialization(),
+                $trainer->getExperience(),
+                $trainer->getEmail(),
+                $trainer->getPhone()
+            );
 
-            return $this->redirectToRoute('app_trainer_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_trainer_index');
         }
 
         return $this->render('trainer/new.html.twig', [

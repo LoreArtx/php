@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Booking;
 use App\Form\BookingType;
 use App\Repository\BookingRepository;
+use App\Entity\WorkoutSession;
+use App\Service\BookingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +16,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/booking')]
 final class BookingController extends AbstractController
 {
+    private BookingService $bookingService;
+
+    public function __construct(BookingService $bookingService)
+    {
+        $this->bookingService = $bookingService;
+    }
+
     #[Route(name: 'app_booking_index', methods: ['GET'])]
     public function index(BookingRepository $bookingRepository): Response
     {
@@ -30,8 +39,11 @@ final class BookingController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($booking);
-            $entityManager->flush();
+            $this->bookingService->createBooking(
+                $booking->getUser()->getId(),
+                 $booking->getWorkoutSession()->getId(),
+                  $booking->getStatus()
+            );
 
             return $this->redirectToRoute('app_booking_index', [], Response::HTTP_SEE_OTHER);
         }

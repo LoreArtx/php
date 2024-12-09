@@ -16,6 +16,7 @@ class TrainerType extends AbstractType
             ->add('specialization')
             ->add('experience')
             ->add('email')
+            ->add('phone')
         ;
     }
 

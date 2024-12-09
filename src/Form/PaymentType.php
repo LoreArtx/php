@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Payment;
 use App\Entity\User;
+use App\Entity\Membership;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -22,6 +23,10 @@ class PaymentType extends AbstractType
             ->add('user', EntityType::class, [
                 'class' => User::class,
                 'choice_label' => 'id',
+            ])
+            ->add('membership', EntityType::class, [
+                'class' => MemberShip::class,
+                'choice_label' => 'id'
             ])
         ;
     }

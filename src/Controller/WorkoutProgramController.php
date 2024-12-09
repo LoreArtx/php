@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\WorkoutProgram;
+use App\Service\WorkoutProgramService;
 use App\Form\WorkoutProgramType;
 use App\Repository\WorkoutProgramRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/workout/program')]
 final class WorkoutProgramController extends AbstractController
 {
+    private WorkoutProgramService $workoutProgramService;
+
+    public function __construct(WorkoutProgramService $workoutProgramService)
+    {
+        $this->workoutProgramService = $workoutProgramService;
+    }
+
     #[Route(name: 'app_workout_program_index', methods: ['GET'])]
     public function index(WorkoutProgramRepository $workoutProgramRepository): Response
     {
@@ -30,8 +38,12 @@ final class WorkoutProgramController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($workoutProgram);
-            $entityManager->flush();
+            $this->workoutProgramService->createWorkoutProgram(
+                $workoutProgram->getName(),
+                $workoutProgram->getDescription(),
+                $workoutProgram->getDuration(),
+                $workoutProgram->getTrainer()->getId()
+            );
 
             return $this->redirectToRoute('app_workout_program_index', [], Response::HTTP_SEE_OTHER);
         }

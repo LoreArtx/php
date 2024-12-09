@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Equipment;
 use App\Form\EquipmentType;
+use App\Service\EquipmentService;
 use App\Repository\EquipmentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,6 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/equipment')]
 final class EquipmentController extends AbstractController
 {
+    private EquipmentService $equipmentService;
+
+    public function __construct(EquipmentService $equipmentService)
+    {
+        $this->equipmentService = $equipmentService;
+    }
+    
     #[Route(name: 'app_equipment_index', methods: ['GET'])]
     public function index(EquipmentRepository $equipmentRepository): Response
     {
@@ -30,8 +38,12 @@ final class EquipmentController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($equipment);
-            $entityManager->flush();
+            $this->equipmentService->createEquipment(
+            $equipment->getName(),
+            $equipment->getType(),
+            $equipment->getQuantity(),
+            $equipment->getStatus()
+        );
 
             return $this->redirectToRoute('app_equipment_index', [], Response::HTTP_SEE_OTHER);
         }

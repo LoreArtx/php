@@ -15,7 +15,7 @@ class WorkoutSessionType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('star_time', null, [
+            ->add('start_time', null, [
                 'widget' => 'single_text',
             ])
             ->add('end_time', null, [

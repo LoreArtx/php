@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Payment;
 use App\Form\PaymentType;
+use App\Service\PaymentService;
 use App\Repository\PaymentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,6 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/payment')]
 final class PaymentController extends AbstractController
 {
+    private PaymentService $paymentService;
+
+    public function __construct(PaymentService $paymentService)
+    {
+        $this->paymentService = $paymentService;
+    }
+
     #[Route(name: 'app_payment_index', methods: ['GET'])]
     public function index(PaymentRepository $paymentRepository): Response
     {
@@ -30,8 +38,13 @@ final class PaymentController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($payment);
-            $entityManager->flush();
+            $this->paymentService->createPayment(
+                $payment->getUser()->getId(),
+                $payment->getAmount(),
+                $payment->getPaymentDate(),
+                $payment->getStatus(),
+                $payment->getMembership()->getId()
+            );
 
             return $this->redirectToRoute('app_payment_index', [], Response::HTTP_SEE_OTHER);
         }

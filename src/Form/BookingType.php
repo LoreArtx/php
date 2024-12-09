@@ -20,7 +20,7 @@ class BookingType extends AbstractType
                 'class' => User::class,
                 'choice_label' => 'id',
             ])
-            ->add('session', EntityType::class, [
+            ->add('workoutSession', EntityType::class, [
                 'class' => WorkoutSession::class,
                 'choice_label' => 'id',
             ])

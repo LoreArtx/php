@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\FeedbackService;
 use App\Entity\Feedback;
 use App\Form\FeedbackType;
 use App\Repository\FeedbackRepository;
@@ -14,6 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/feedback')]
 final class FeedbackController extends AbstractController
 {
+    private FeedbackService $feedbackService;
+
+    public function __construct(FeedbackService $feedbackService)
+    {
+        $this->feedbackService = $feedbackService;
+    }
+
     #[Route(name: 'app_feedback_index', methods: ['GET'])]
     public function index(FeedbackRepository $feedbackRepository): Response
     {
@@ -30,10 +38,18 @@ final class FeedbackController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($feedback);
-            $entityManager->flush();
+            $data = $form->getData();
 
-            return $this->redirectToRoute('app_feedback_index', [], Response::HTTP_SEE_OTHER);
+            $this->feedbackService->createFeedback(
+                    $feedback->getUser()->getId(),
+                    $feedback->getTainer()->getId(),
+                    $feedback->getRating(),
+                    $feedback->getComment()
+                );
+
+                return $this->redirectToRoute('app_feedback_index');
+
+            $this->addFlash('error', 'Invalid User or Trainer selected.');
         }
 
         return $this->render('feedback/new.html.twig', [

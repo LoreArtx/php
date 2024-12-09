@@ -45,6 +45,9 @@ class Trainer
     #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'tainer')]
     private Collection $feedbacks;
 
+    #[ORM\Column(length: 255)]
+    private ?string $phone = null;
+
     public function __construct()
     {
         $this->workoutPrograms = new ArrayCollection();
@@ -198,6 +201,18 @@ class Trainer
                 $feedbacks->setTainer(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(string $phone): static
+    {
+        $this->phone = $phone;
 
         return $this;
     }

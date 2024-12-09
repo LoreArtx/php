@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\WorkoutSession;
 use App\Form\WorkoutSessionType;
+use App\Service\WorkoutSessionService;
 use App\Repository\WorkoutSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,6 +15,11 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/workout/session')]
 final class WorkoutSessionController extends AbstractController
 {
+    private WorkoutSessionService $workoutSessionService;
+    public function __construct(WorkoutSessionService $workoutSessionService){
+        $this->workoutSessionService = $workoutSessionService;
+    }
+
     #[Route(name: 'app_workout_session_index', methods: ['GET'])]
     public function index(WorkoutSessionRepository $workoutSessionRepository): Response
     {
@@ -30,8 +36,12 @@ final class WorkoutSessionController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($workoutSession);
-            $entityManager->flush();
+            $this->workoutSessionService->createWorkoutSession(
+                $workoutSession->getProgram()->getId(),
+                $workoutSession->getTrainer()->getId(),
+                $workoutSession->getStartTime(),
+                $workoutSession->getEndTime()
+            );
 
             return $this->redirectToRoute('app_workout_session_index', [], Response::HTTP_SEE_OTHER);
         }

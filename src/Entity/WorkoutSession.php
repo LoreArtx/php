@@ -23,7 +23,7 @@ class WorkoutSession
     private ?Trainer $trainer = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $star_time = null;
+    private ?\DateTimeInterface $start_time = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $end_time = null;
@@ -89,14 +89,14 @@ class WorkoutSession
         return $this;
     }
 
-    public function getStarTime(): ?\DateTimeInterface
+    public function getStartTime(): ?\DateTimeInterface
     {
-        return $this->star_time;
+        return $this->start_time;
     }
 
-    public function setStarTime(\DateTimeInterface $star_time): static
+    public function setStartTime(\DateTimeInterface $start_time): static
     {
-        $this->star_time = $star_time;
+        $this->start_time = $start_time;
 
         return $this;
     }

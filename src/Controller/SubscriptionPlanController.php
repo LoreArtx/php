@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\SubscriptionPlan;
 use App\Form\SubscriptionPlanType;
+use App\Service\SubscriptionPlanService;
 use App\Repository\SubscriptionPlanRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,6 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/subscription/plan')]
 final class SubscriptionPlanController extends AbstractController
 {
+    private SubscriptionPlanService $subscriptionPlanService;
+
+    public function __construct(SubscriptionPlanService $subscriptionPlanService)
+    {
+        $this->subscriptionPlanService = $subscriptionPlanService;
+    }
+
     #[Route(name: 'app_subscription_plan_index', methods: ['GET'])]
     public function index(SubscriptionPlanRepository $subscriptionPlanRepository): Response
     {
@@ -30,9 +38,10 @@ final class SubscriptionPlanController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($subscriptionPlan);
-            $entityManager->flush();
-
+            $this->subscriptionPlanService->createSubscriptionPlan(
+            $subscriptionPlan->getName(),
+            $subscriptionPlan->getPrice(),
+            $subscriptionPlan->getDuration() );
             return $this->redirectToRoute('app_subscription_plan_index', [], Response::HTTP_SEE_OTHER);
         }
 
