@@ -6,6 +6,7 @@ use App\Repository\TrainerRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TrainerRepository::class)]
 class Trainer
@@ -16,16 +17,31 @@ class Trainer
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Name is required.")]
+    #[Assert\Length(max: 255, maxMessage: "Name cannot exceed 255 characters.")]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Specialization is required.")]
     private ?string $specialization = null;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: "Experience is required.")]
+    #[Assert\PositiveOrZero(message: "Experience must be a positive number or zero.")]
     private ?int $experience = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Email is required.")]
+    #[Assert\Email(message: "The email '{{ value }}' is not a valid email.")]
     private ?string $email = null;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Phone is required.")]
+    #[Assert\Regex(
+        pattern: "/^\+?\d{10,15}$/",
+        message: "Phone number must be valid and contain 10-15 digits."
+    )]
+    private ?string $phone = null;
 
     /**
      * @var Collection<int, WorkoutProgram>
@@ -43,16 +59,13 @@ class Trainer
      * @var Collection<int, Feedback>
      */
     #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'trainer')]
-    private Collection $feedbacks;
-
-    #[ORM\Column(length: 255)]
-    private ?string $phone = null;
+    private Collection $feedback;
 
     public function __construct()
     {
         $this->workoutPrograms = new ArrayCollection();
         $this->workoutSessions = new ArrayCollection();
-        $this->feedbacks = new ArrayCollection();
+        $this->feedback = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -115,6 +128,18 @@ class Trainer
         return $this;
     }
 
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(string $phone): static
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+
     /**
      * @return Collection<int, WorkoutProgram>
      */
@@ -136,7 +161,6 @@ class Trainer
     public function removeWorkoutProgram(WorkoutProgram $workoutProgram): static
     {
         if ($this->workoutPrograms->removeElement($workoutProgram)) {
-            // set the owning side to null (unless already changed)
             if ($workoutProgram->getTrainer() === $this) {
                 $workoutProgram->setTrainer(null);
             }
@@ -166,7 +190,6 @@ class Trainer
     public function removeWorkoutSession(WorkoutSession $workoutSession): static
     {
         if ($this->workoutSessions->removeElement($workoutSession)) {
-            // set the owning side to null (unless already changed)
             if ($workoutSession->getTrainer() === $this) {
                 $workoutSession->setTrainer(null);
             }
@@ -180,39 +203,26 @@ class Trainer
      */
     public function getFeedback(): Collection
     {
-        return $this->feedbacks;
+        return $this->feedback;
     }
 
-    public function addFeedback(Feedback $feedbacks): static
+    public function addFeedback(Feedback $feedback): static
     {
-        if (!$this->feedbacks->contains($feedbacks)) {
-            $this->feedbacks->add($feedbacks);
-            $feedbacks->setTrainer($this);
+        if (!$this->feedback->contains($feedback)) {
+            $this->feedback->add($feedback);
+            $feedback->setTrainer($this);
         }
 
         return $this;
     }
 
-    public function removeFeedback(Feedback $feedbacks): static
+    public function removeFeedback(Feedback $feedback): static
     {
-        if ($this->feedbacks->removeElement($feedbacks)) {
-            // set the owning side to null (unless already changed)
-            if ($feedbacks->getTrainer() === $this) {
-                $feedbacks->setTrainer(null);
+        if ($this->feedback->removeElement($feedback)) {
+            if ($feedback->getTrainer() === $this) {
+                $feedback->setTrainer(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getPhone(): ?string
-    {
-        return $this->phone;
-    }
-
-    public function setPhone(string $phone): static
-    {
-        $this->phone = $phone;
 
         return $this;
     }

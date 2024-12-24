@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: WorkoutSessionRepository::class)]
 class WorkoutSession
@@ -17,27 +18,34 @@ class WorkoutSession
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'workoutSessions')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?WorkoutProgram $program = null;
 
     #[ORM\ManyToOne(inversedBy: 'workoutSessions')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Trainer $trainer = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotBlank(message: "Start time is required.")]
+    #[Assert\Type(\DateTimeInterface::class)]
     private ?\DateTimeInterface $start_time = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotBlank(message: "End time is required.")]
+    #[Assert\Type(\DateTimeInterface::class)]
+    #[Assert\GreaterThan(propertyPath: "start_time", message: "End time must be later than start time.")]
     private ?\DateTimeInterface $end_time = null;
 
     /**
      * @var Collection<int, User>
      */
-    #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'workoutSession')]
+    #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'workoutSession', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $users;
 
     /**
      * @var Collection<int, Booking>
      */
-    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'workoutSession')]
+    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'workoutSession', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $bookings;
 
     /**
@@ -56,13 +64,6 @@ class WorkoutSession
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getProgram(): ?WorkoutProgram

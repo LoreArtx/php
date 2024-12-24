@@ -5,25 +5,39 @@ namespace App\Entity;
 use App\Repository\FeedbackRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: FeedbackRepository::class)]
 class Feedback
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'feedback')]
+    #[Assert\NotNull(message: "User must be specified.")]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'feedback')]
+    #[Assert\NotNull(message: "Trainer must be specified.")]
     private ?Trainer $trainer = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotNull(message: "Rating is required.")]
+    #[Assert\Range(
+        min: 1,
+        max: 5,
+        notInRangeMessage: "Rating must be between {{ min }} and {{ max }}."
+    )]
     private ?int $rating = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank(message: "Comment cannot be blank.")]
+    #[Assert\Length(
+        min: 10,
+        minMessage: "Comment must be at least {{ limit }} characters long."
+    )]
     private ?string $comment = null;
 
     public function getId(): ?int
@@ -50,12 +64,12 @@ class Feedback
         return $this;
     }
 
-    public function gettrainer(): ?Trainer
+    public function getTrainer(): ?Trainer
     {
         return $this->trainer;
     }
 
-    public function settrainer(?Trainer $trainer): static
+    public function setTrainer(?Trainer $trainer): static
     {
         $this->trainer = $trainer;
 

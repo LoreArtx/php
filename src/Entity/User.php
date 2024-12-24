@@ -17,41 +17,49 @@ class User
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Name is required.")]
+    #[Assert\Length(max: 255, maxMessage: "Name cannot exceed 255 characters.")]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: "Email is required.")]
+    #[Assert\Email(message: "Invalid email address.")]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Phone number is required.")]
+    #[Assert\Regex(
+        pattern: "/^\+?\d{10,15}$/",
+        message: "Phone number must be valid and contain 10-15 digits."
+    )]
     private ?string $phone = null;
 
-    #[Assert\Choice(choices: ['client', 'admin', 'trainer'], message: 'Wrong typed role. Choose: client, admin or trainer.')]
     #[ORM\Column(length: 255)]
+    #[Assert\Choice(choices: ['client', 'admin', 'trainer'], message: "Invalid role. Choose: client, admin, or trainer.")]
     private ?string $role = null;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Password is required.")]
+    #[Assert\Length(min: 8, minMessage: "Password must be at least 8 characters long.")]
+    private ?string $password = null;
 
     /**
      * @var Collection<int, Payment>
      */
-    #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'user')]
+    #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
     private Collection $payments;
 
     /**
      * @var Collection<int, Feedback>
      */
-    #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'user')]
+    #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
     private Collection $feedback;
 
     /**
      * @var Collection<int, Booking>
      */
-    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'user')]
+    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
     private Collection $bookings;
-
-    #[ORM\ManyToOne(inversedBy: 'users')]
-    private ?WorkoutSession $workoutSessions = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $password = null;
 
     public function __construct()
     {
@@ -60,19 +68,9 @@ class User
         $this->bookings = new ArrayCollection();
     }
 
-    #[ORM\ManyToOne(inversedBy: 'user')]
-    #[ORM\JoinColumn(nullable: false)]
-
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getName(): ?string
@@ -123,9 +121,16 @@ class User
         return $this;
     }
 
-    public function getMembership(): ?Membership
+    public function getPassword(): ?string
     {
-        return $this->membership;
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
     }
 
     /**
@@ -149,7 +154,6 @@ class User
     public function removePayment(Payment $payment): static
     {
         if ($this->payments->removeElement($payment)) {
-            // set the owning side to null (unless already changed)
             if ($payment->getUser() === $this) {
                 $payment->setUser(null);
             }
@@ -179,7 +183,6 @@ class User
     public function removeFeedback(Feedback $feedback): static
     {
         if ($this->feedback->removeElement($feedback)) {
-            // set the owning side to null (unless already changed)
             if ($feedback->getUser() === $this) {
                 $feedback->setUser(null);
             }
@@ -209,7 +212,6 @@ class User
     public function removeBooking(Booking $booking): static
     {
         if ($this->bookings->removeElement($booking)) {
-            // set the owning side to null (unless already changed)
             if ($booking->getUser() === $this) {
                 $booking->setUser(null);
             }
@@ -217,30 +219,4 @@ class User
 
         return $this;
     }
-
-
-    public function getWorkoutSessions(): ?WorkoutSession
-    {
-        return $this->workoutSessions;
-    }
-
-    public function setWorkoutSessions(?WorkoutSession $workoutSessions): static
-    {
-        $this->workoutSessions = $workoutSessions;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
 }

@@ -7,22 +7,29 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SubscriptionPlanRepository::class)]
 class SubscriptionPlan
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "The name of the subscription plan is required.")]
+    #[Assert\Length(max: 255, maxMessage: "The name cannot exceed 255 characters.")]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Assert\NotNull(message: "The price is required.")]
+    #[Assert\PositiveOrZero(message: "The price must be a positive value or zero.")]
     private ?string $price = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotNull(message: "The duration is required.")]
+    #[Assert\Positive(message: "The duration must be a positive integer.")]
     private ?int $duration = null;
 
     /**

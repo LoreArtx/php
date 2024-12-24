@@ -7,34 +7,42 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MembershipRepository::class)]
 class Membership
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[Assert\NotNull(message: "User must be specified.")]
     private ?User $user = null;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[Assert\NotNull(message: "Subscription must be specified.")]
     private ?SubscriptionPlan $subscription = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotNull(message: "Start date is required.")]
+    #[Assert\LessThan(propertyPath: 'end_date', message: "Start date must be before the end date.")]
     private ?\DateTimeInterface $start_date = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotNull(message: "End date is required.")]
+    #[Assert\GreaterThan(propertyPath: 'start_date', message: "End date must be after the start date.")]
     private ?\DateTimeInterface $end_date = null;
 
     /**
      * @var Collection<int, Payment>
      */
-    #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'membership')]
+    #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'membership', cascade: ['persist', 'remove'])]
     private Collection $payments;
 
-    #[ORM\ManyToOne(inversedBy: 'membership')]
+    #[ORM\ManyToOne(inversedBy: 'memberships')]
+    #[Assert\NotNull(message: "Subscription Plan must be specified.")]
     private ?SubscriptionPlan $subscriptionPlan = null;
 
     public function __construct()
@@ -123,7 +131,6 @@ class Membership
     public function removePayment(Payment $payment): static
     {
         if ($this->payments->removeElement($payment)) {
-            // set the owning side to null (unless already changed)
             if ($payment->getMembership() === $this) {
                 $payment->setMembership(null);
             }

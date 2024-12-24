@@ -5,28 +5,37 @@ namespace App\Entity;
 use App\Repository\PaymentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PaymentRepository::class)]
 class Payment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'payments')]
+    #[Assert\NotNull(message: "User must be specified.")]
     private ?User $user = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Assert\NotNull(message: "Amount is required.")]
+    #[Assert\Positive(message: "Amount must be a positive value.")]
     private ?string $amount = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotNull(message: "Payment date is required.")]
+    #[Assert\LessThanOrEqual('now', message: "Payment date cannot be in the future.")]
     private ?\DateTimeInterface $payment_date = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotNull(message: "Status is required.")]
+    #[Assert\Choice(choices: ['pending', 'completed', 'failed'], message: "Status must be one of 'pending', 'completed', or 'failed'.")]
     private ?string $status = null;
 
     #[ORM\ManyToOne(inversedBy: 'payments')]
+    #[Assert\NotNull(message: "Membership must be specified.")]
     private ?Membership $membership = null;
 
     public function getId(): ?int

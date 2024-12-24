@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: WorkoutProgramRepository::class)]
 class WorkoutProgram
@@ -17,21 +18,28 @@ class WorkoutProgram
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Program name is required.")]
+    #[Assert\Length(max: 255, maxMessage: "Program name cannot exceed 255 characters.")]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank(message: "Description is required.")]
+    #[Assert\Length(max: 5000, maxMessage: "Description cannot exceed 5000 characters.")]
     private ?string $description = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank(message: "Duration is required.")]
+    #[Assert\Positive(message: "Duration must be a positive integer.")]
     private ?int $duration = null;
 
     #[ORM\ManyToOne(inversedBy: 'workoutPrograms')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Trainer $trainer = null;
 
     /**
      * @var Collection<int, WorkoutSession>
      */
-    #[ORM\OneToMany(targetEntity: WorkoutSession::class, mappedBy: 'program')]
+    #[ORM\OneToMany(targetEntity: WorkoutSession::class, mappedBy: 'program', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $workoutSessions;
 
     public function __construct()
@@ -42,13 +50,6 @@ class WorkoutProgram
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getName(): ?string
@@ -120,7 +121,6 @@ class WorkoutProgram
     public function removeWorkoutSession(WorkoutSession $workoutSession): static
     {
         if ($this->workoutSessions->removeElement($workoutSession)) {
-            // set the owning side to null (unless already changed)
             if ($workoutSession->getProgram() === $this) {
                 $workoutSession->setProgram(null);
             }

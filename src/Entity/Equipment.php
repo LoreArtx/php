@@ -6,25 +6,45 @@ use App\Repository\EquipmentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: EquipmentRepository::class)]
 class Equipment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "Name cannot be blank.")]
+    #[Assert\Length(
+        min: 3,
+        minMessage: "Name must be at least 3 characters long.",
+        max: 255,
+        maxMessage: "Name cannot exceed 255 characters."
+    )]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "Type cannot be blank.")]
+    #[Assert\Length(
+        max: 255,
+        maxMessage: "Type cannot exceed 255 characters."
+    )]
     private ?string $type = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
+    #[Assert\NotBlank(message: "Quantity cannot be blank.")]
+    #[Assert\Positive(message: "Quantity must be positive.")]
     private ?int $quantity = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "Status cannot be blank.")]
+    #[Assert\Choice(
+        choices: ['available', 'unavailable'],
+        message: "Status must be 'available' or 'unavailable'."
+    )]
     private ?string $status = null;
 
     /**

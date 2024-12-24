@@ -36,8 +36,8 @@ class BookingValidatorService
             'status' => [
                 new Assert\NotBlank(['message' => 'Status cannot be blank']),
                 new Assert\Choice([
-                    'choices' => ['confirmed', 'cancelled'],
-                    'message' => 'Status must be one of "confirmed" or "cancelled"',
+                    'choices' => ['confirmed', 'canceled'],
+                    'message' => 'Status must be one of "confirmed" or "canceled"',
                 ]),
             ],
         ]);

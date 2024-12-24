@@ -4,22 +4,36 @@ namespace App\Entity;
 
 use App\Repository\BookingRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
 class Booking
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'bookings')]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'bookings')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "User cannot be null.")]
     private ?User $user = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "Status cannot be blank.")]
+    #[Assert\Choice(
+        choices: ['pending', 'confirmed', 'canceled'],
+        message: "Status must be 'pending', 'confirmed', or 'canceled'."
+    )]
+    #[Assert\Length(
+        max: 255,
+        maxMessage: "Status cannot exceed 255 characters."
+    )]
     private ?string $status = null;
 
-    #[ORM\ManyToOne(inversedBy: 'bookings')]
+    #[ORM\ManyToOne(targetEntity: WorkoutSession::class, inversedBy: 'bookings')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "Workout session cannot be null.")]
     private ?WorkoutSession $workoutSession = null;
 
     public function getId(): ?int
@@ -46,7 +60,7 @@ class Booking
         return $this;
     }
 
-        public function getStatus(): ?string
+    public function getStatus(): ?string
     {
         return $this->status;
     }
