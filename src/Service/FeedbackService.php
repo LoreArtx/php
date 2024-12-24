@@ -8,22 +8,47 @@ use App\Entity\Trainer;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\UserRepository;
 use App\Repository\TrainerRepository;
-    
+use App\Services\RequestCheckerService;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class FeedbackService
 {
     private EntityManagerInterface $entityManager;
     private UserRepository $userRepository;
     private TrainerRepository $trainerRepository;
+    private RequestCheckerService $requestChecker;
 
-    public function __construct(EntityManagerInterface $entityManager, UserRepository $userRepository, TrainerRepository $trainerRepository)
+    public function __construct(EntityManagerInterface $entityManager, UserRepository $userRepository, TrainerRepository $trainerRepository, RequestCheckerService $requestChecker
+)
     {
         $this->entityManager = $entityManager;
         $this->userRepository = $userRepository;
         $this->trainerRepository = $trainerRepository;
+        $this->requestChecker = $requestChecker;
     }
 
     public function createFeedback(int $userID, int $trainerID, int $rating, string $comment): Feedback
     {
+        $this->requestChecker->check([
+            'userID' => $userID,
+            'trainerID' => $trainerID,
+            'rating' => $rating,
+            'comment' => $comment
+        ], ['userID', 'trainerID', 'rating', 'comment']);
+
+        $this->requestChecker->validateRequestDataByConstraints($rating, [
+            'rating' => [
+                new Assert\NotBlank(),
+                new Assert\Range(['min' => 1, 'max' => 5])
+            ]
+        ]);
+
+        $this->requestChecker->validateRequestDataByConstraints($comment, [
+            'comment' => [
+                new Assert\NotBlank()
+            ]
+        ]);
+
         $feedback = new Feedback();
         $user = $this->userRepository->find($userID);
         $trainer = $this->trainerRepository->find($trainerID);
