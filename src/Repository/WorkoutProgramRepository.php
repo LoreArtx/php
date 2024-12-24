@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\WorkoutProgram;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * @extends ServiceEntityRepository<WorkoutProgram>
@@ -16,28 +17,28 @@ class WorkoutProgramRepository extends ServiceEntityRepository
         parent::__construct($registry, WorkoutProgram::class);
     }
 
-    //    /**
-    //     * @return WorkoutProgram[] Returns an array of WorkoutProgram objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('w')
-    //            ->andWhere('w.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('w.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @param int $itemsPerPage
+     * @param int $page
+     * @return array
+     */
+    public function getWorkoutProgramsPaginated(int $itemsPerPage, int $page): array
+    {
+        $queryBuilder = $this->createQueryBuilder('w');
 
-    //    public function findOneBySomeField($value): ?WorkoutProgram
-    //    {
-    //        return $this->createQueryBuilder('w')
-    //            ->andWhere('w.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $paginator = new Paginator($queryBuilder);
+        $totalItems = count($paginator);
+        $totalPages = ceil($totalItems / $itemsPerPage);
+
+        $paginator
+            ->getQuery()
+            ->setFirstResult($itemsPerPage * ($page - 1))
+            ->setMaxResults($itemsPerPage);
+
+        return [
+            'workoutPrograms' => $paginator->getQuery()->getResult(),
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+        ];
+    }
 }

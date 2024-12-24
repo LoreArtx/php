@@ -27,10 +27,19 @@ final class UserController extends AbstractController
     }
 
     #[Route(name: 'app_user_index', methods: ['GET'])]
-    public function index(UserRepository $userRepository): Response
+    public function index(Request $request, UserRepository $userRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = (int)$request->query->get('page', 1);
+
+        $userData = $userRepository->getUsersPaginated($itemsPerPage, $page);
+
         return $this->render('user/index.html.twig', [
-            'users' => $userRepository->findAll(),
+            'users' => $userData['users'],
+            'totalItems' => $userData['totalItems'],
+            'totalPages' => $userData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

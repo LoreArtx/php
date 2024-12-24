@@ -5,10 +5,8 @@ namespace App\Repository;
 use App\Entity\Equipment;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
-/**
- * @extends ServiceEntityRepository<Equipment>
- */
 class EquipmentRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -16,28 +14,44 @@ class EquipmentRepository extends ServiceEntityRepository
         parent::__construct($registry, Equipment::class);
     }
 
-//    /**
-//     * @return Equipment[] Returns an array of Equipment objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('e')
-//            ->andWhere('e.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('e.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @param array $data
+     * @param int $itemsPerPage
+     * @param int $page
+     * @return array
+     */
+    public function getAllEquipmentByFilter(array $data, int $itemsPerPage, int $page): array
+    {
+        $queryBuilder = $this->createQueryBuilder('e');
 
-//    public function findOneBySomeField($value): ?Equipment
-//    {
-//        return $this->createQueryBuilder('e')
-//            ->andWhere('e.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        if (isset($data['name'])) {
+            $queryBuilder->andWhere('e.name LIKE :name')
+                ->setParameter('name', '%' . $data['name'] . '%');
+        }
+
+        if (isset($data['type'])) {
+            $queryBuilder->andWhere('e.type = :type')
+                ->setParameter('type', $data['type']);
+        }
+
+        if (isset($data['status'])) {
+            $queryBuilder->andWhere('e.status = :status')
+                ->setParameter('status', $data['status']);
+        }
+
+        $paginator = new Paginator($queryBuilder);
+        $totalItems = count($paginator);
+        $totalPages = ceil($totalItems / $itemsPerPage);
+
+        $paginator
+            ->getQuery()
+            ->setFirstResult($itemsPerPage * ($page - 1))
+            ->setMaxResults($itemsPerPage);
+
+        return [
+            'equipment' => $paginator->getQuery()->getResult(),
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+        ];
+    }
 }

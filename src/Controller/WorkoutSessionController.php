@@ -25,10 +25,19 @@ final class WorkoutSessionController extends AbstractController
     }
 
     #[Route(name: 'app_workout_session_index', methods: ['GET'])]
-    public function index(WorkoutSessionRepository $workoutSessionRepository): Response
+    public function index(Request $request, WorkoutSessionRepository $workoutSessionRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = (int)$request->query->get('page', 1);
+
+        $workoutSessionData = $workoutSessionRepository->getWorkoutSessionsPaginated($itemsPerPage, $page);
+
         return $this->render('workout_session/index.html.twig', [
-            'workout_sessions' => $workoutSessionRepository->findAll(),
+            'workout_sessions' => $workoutSessionData['workoutSessions'],
+            'totalItems' => $workoutSessionData['totalItems'],
+            'totalPages' => $workoutSessionData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

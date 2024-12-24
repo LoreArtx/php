@@ -27,10 +27,19 @@ final class MembershipController extends AbstractController
     }
     
     #[Route(name: 'app_membership_index', methods: ['GET'])]
-    public function index(MembershipRepository $membershipRepository): Response
+    public function index(Request $request, MembershipRepository $membershipRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = isset($requestData['page']) ? (int)$requestData['page'] : 1;
+
+        $membershipData = $membershipRepository->getAllMembershipByFilter($requestData, $itemsPerPage, $page);
+
         return $this->render('membership/index.html.twig', [
-            'memberships' => $membershipRepository->findAll(),
+            'memberships' => $membershipData['memberships'],
+            'totalItems' => $membershipData['totalItems'],
+            'totalPages' => $membershipData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

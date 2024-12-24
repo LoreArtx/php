@@ -27,10 +27,19 @@ final class SubscriptionPlanController extends AbstractController
     }
 
     #[Route(name: 'app_subscription_plan_index', methods: ['GET'])]
-    public function index(SubscriptionPlanRepository $subscriptionPlanRepository): Response
+    public function index(Request $request, SubscriptionPlanRepository $subscriptionPlanRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = (int)$request->query->get('page', 1);
+
+        $subscriptionPlanData = $subscriptionPlanRepository->getAllSubscriptionPlans($itemsPerPage, $page);
+
         return $this->render('subscription_plan/index.html.twig', [
-            'subscription_plans' => $subscriptionPlanRepository->findAll(),
+            'subscription_plans' => $subscriptionPlanData['subscriptionPlans'],
+            'totalItems' => $subscriptionPlanData['totalItems'],
+            'totalPages' => $subscriptionPlanData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

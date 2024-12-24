@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Trainer;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * @extends ServiceEntityRepository<Trainer>
@@ -16,28 +17,28 @@ class TrainerRepository extends ServiceEntityRepository
         parent::__construct($registry, Trainer::class);
     }
 
-    //    /**
-    //     * @return Trainer[] Returns an array of Trainer objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('t.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @param int $itemsPerPage
+     * @param int $page
+     * @return array
+     */
+    public function getTrainersPaginated(int $itemsPerPage, int $page): array
+    {
+        $queryBuilder = $this->createQueryBuilder('t');
 
-    //    public function findOneBySomeField($value): ?Trainer
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $paginator = new Paginator($queryBuilder);
+        $totalItems = count($paginator);
+        $totalPages = ceil($totalItems / $itemsPerPage);
+
+        $paginator
+            ->getQuery()
+            ->setFirstResult($itemsPerPage * ($page - 1))
+            ->setMaxResults($itemsPerPage);
+
+        return [
+            'trainers' => $paginator->getQuery()->getResult(),
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+        ];
+    }
 }

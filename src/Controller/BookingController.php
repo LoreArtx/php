@@ -28,10 +28,19 @@ final class BookingController extends AbstractController
     }
 
     #[Route(name: 'app_booking_index', methods: ['GET'])]
-    public function index(BookingRepository $bookingRepository): Response
+    public function index(Request $request, BookingRepository $bookingRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = isset($requestData['page']) ? (int)$requestData['page'] : 1;
+
+        $bookingsData = $bookingRepository->getAllBookingsByFilter($requestData, $itemsPerPage, $page);
+
         return $this->render('booking/index.html.twig', [
-            'bookings' => $bookingRepository->findAll(),
+            'bookings' => $bookingsData['bookings'],
+            'totalItems' => $bookingsData['totalItems'],
+            'totalPages' => $bookingsData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

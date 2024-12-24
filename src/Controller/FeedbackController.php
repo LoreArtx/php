@@ -27,10 +27,19 @@ final class FeedbackController extends AbstractController
     }
 
     #[Route(name: 'app_feedback_index', methods: ['GET'])]
-    public function index(FeedbackRepository $feedbackRepository): Response
+    public function index(Request $request, FeedbackRepository $feedbackRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = isset($requestData['page']) ? (int)$requestData['page'] : 1;
+
+        $feedbackData = $feedbackRepository->getAllFeedbackByFilter($requestData, $itemsPerPage, $page);
+
         return $this->render('feedback/index.html.twig', [
-            'feedback' => $feedbackRepository->findAll(),
+            'feedback' => $feedbackData['feedback'],
+            'totalItems' => $feedbackData['totalItems'],
+            'totalPages' => $feedbackData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

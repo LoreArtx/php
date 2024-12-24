@@ -27,10 +27,18 @@ final class EquipmentController extends AbstractController
     }
     
     #[Route(name: 'app_equipment_index', methods: ['GET'])]
-    public function index(EquipmentRepository $equipmentRepository): Response
+    public function index(Request $request, EquipmentRepository $equipmentRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = isset($requestData['page']) ? (int)$requestData['page'] : 1;
+        $equipmentData = $equipmentRepository->getAllEquipmentByFilter($requestData, $itemsPerPage, $page);
+
         return $this->render('equipment/index.html.twig', [
-            'equipment' => $equipmentRepository->findAll(),
+            'equipment' => $equipmentData['equipment'],
+            'totalItems' => $equipmentData['totalItems'],
+            'totalPages' => $equipmentData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

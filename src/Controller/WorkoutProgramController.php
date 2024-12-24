@@ -26,11 +26,20 @@ final class WorkoutProgramController extends AbstractController
         $this->workoutProgramValidatorService = $workoutProgramValidatorService;
     }
 
-    #[Route(name: 'app_workout_program_index', methods: ['GET'])]
-    public function index(WorkoutProgramRepository $workoutProgramRepository): Response
+     #[Route(name: 'app_workout_program_index', methods: ['GET'])]
+    public function index(Request $request, WorkoutProgramRepository $workoutProgramRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = (int)$request->query->get('page', 1);
+
+        $workoutProgramData = $workoutProgramRepository->getWorkoutProgramsPaginated($itemsPerPage, $page);
+
         return $this->render('workout_program/index.html.twig', [
-            'workout_programs' => $workoutProgramRepository->findAll(),
+            'workout_programs' => $workoutProgramData['workoutPrograms'],
+            'totalItems' => $workoutProgramData['totalItems'],
+            'totalPages' => $workoutProgramData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

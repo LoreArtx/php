@@ -27,10 +27,19 @@ final class TrainerController extends AbstractController
     }
 
     #[Route(name: 'app_trainer_index', methods: ['GET'])]
-    public function index(TrainerRepository $trainerRepository): Response
+    public function index(Request $request, TrainerRepository $trainerRepository): Response
     {
+        $requestData = $request->query->all();
+        $itemsPerPage = (int)(isset($requestData['itemsPerPage']) ? $requestData['itemsPerPage'] : 1);
+        $page = (int)$request->query->get('page', 1);
+
+        $trainerData = $trainerRepository->getTrainersPaginated($itemsPerPage, $page);
+
         return $this->render('trainer/index.html.twig', [
-            'trainers' => $trainerRepository->findAll(),
+            'trainers' => $trainerData['trainers'],
+            'totalItems' => $trainerData['totalItems'],
+            'totalPages' => $trainerData['totalPages'],
+            'currentPage' => $page,
         ]);
     }
 

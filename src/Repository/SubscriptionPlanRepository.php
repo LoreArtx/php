@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\SubscriptionPlan;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * @extends ServiceEntityRepository<SubscriptionPlan>
@@ -16,28 +17,28 @@ class SubscriptionPlanRepository extends ServiceEntityRepository
         parent::__construct($registry, SubscriptionPlan::class);
     }
 
-    //    /**
-    //     * @return SubscriptionPlan[] Returns an array of SubscriptionPlan objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @param int $itemsPerPage
+     * @param int $page
+     * @return array
+     */
+    public function getAllSubscriptionPlans(int $itemsPerPage, int $page): array
+    {
+        $queryBuilder = $this->createQueryBuilder('s');
 
-    //    public function findOneBySomeField($value): ?SubscriptionPlan
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $paginator = new Paginator($queryBuilder);
+        $totalItems = count($paginator);
+        $totalPages = ceil($totalItems / $itemsPerPage);
+
+        $paginator
+            ->getQuery()
+            ->setFirstResult($itemsPerPage * ($page - 1))
+            ->setMaxResults($itemsPerPage);
+
+        return [
+            'subscriptionPlans' => $paginator->getQuery()->getResult(),
+            'totalItems' => $totalItems,
+            'totalPages' => $totalPages,
+        ];
+    }
 }
