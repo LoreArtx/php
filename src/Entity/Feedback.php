@@ -6,7 +6,40 @@ use App\Repository\FeedbackRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Delete;
 
+#[ApiResource(
+    collectionOperations: [
+        'get' => [
+            'method' => 'GET',
+            'normalization_context' => ['groups' => ['get:collection:feedback']],
+        ],
+        'post' => [
+            'method' => 'POST',
+            'denormalization_context' => ['groups' => ['post:collection:feedback']],
+            'normalization_context' => ['groups' => ['get:collection:feedback']],
+        ]
+    ],
+    itemOperations: [
+        'get' => [
+            'method' => 'GET',
+            'normalization_context' => ['groups' => ['get:item:feedback']],
+        ],
+        'put' => [
+            'method' => 'PUT',
+            'denormalization_context' => ['groups' => ['put:item:feedback']],
+            'normalization_context' => ['groups' => ['get:item:feedback']],
+        ],
+        'delete' => [
+            'method' => 'DELETE',
+        ]
+    ]
+)]
 #[ORM\Entity(repositoryClass: FeedbackRepository::class)]
 class Feedback
 {
@@ -17,10 +50,12 @@ class Feedback
 
     #[ORM\ManyToOne(inversedBy: 'feedback')]
     #[Assert\NotNull(message: "User must be specified.")]
+    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'feedback')]
     #[Assert\NotNull(message: "Trainer must be specified.")]
+    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
     private ?Trainer $trainer = null;
 
     #[ORM\Column(type: 'integer')]
@@ -30,6 +65,7 @@ class Feedback
         max: 5,
         notInRangeMessage: "Rating must be between {{ min }} and {{ max }}."
     )]
+    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
     private ?int $rating = null;
 
     #[ORM\Column(type: Types::TEXT)]
@@ -38,6 +74,7 @@ class Feedback
         min: 10,
         minMessage: "Comment must be at least {{ limit }} characters long."
     )]
+    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
     private ?string $comment = null;
 
     public function getId(): ?int
@@ -48,7 +85,6 @@ class Feedback
     public function setId(int $id): static
     {
         $this->id = $id;
-
         return $this;
     }
 
@@ -60,7 +96,6 @@ class Feedback
     public function setUser(?User $user): static
     {
         $this->user = $user;
-
         return $this;
     }
 
@@ -72,7 +107,6 @@ class Feedback
     public function setTrainer(?Trainer $trainer): static
     {
         $this->trainer = $trainer;
-
         return $this;
     }
 
@@ -84,7 +118,6 @@ class Feedback
     public function setRating(int $rating): static
     {
         $this->rating = $rating;
-
         return $this;
     }
 
@@ -96,7 +129,6 @@ class Feedback
     public function setComment(string $comment): static
     {
         $this->comment = $comment;
-
         return $this;
     }
 }
