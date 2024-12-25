@@ -2,16 +2,40 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
 use App\Repository\BookingRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['booking:read:collection']]
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['booking:write']]
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['booking:read:item']]
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['booking:write']]
+        ),
+        new Delete()
+    ]
+)]
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
 class Booking
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'bookings')]
@@ -19,16 +43,10 @@ class Booking
     #[Assert\NotNull(message: "User cannot be null.")]
     private ?User $user = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Status cannot be blank.")]
-    #[Assert\Choice(
-        choices: ['pending', 'confirmed', 'canceled'],
-        message: "Status must be 'pending', 'confirmed', or 'canceled'."
-    )]
-    #[Assert\Length(
-        max: 255,
-        maxMessage: "Status cannot exceed 255 characters."
-    )]
+    #[Assert\Choice(choices: ['pending', 'confirmed', 'canceled'], message: "Status must be 'pending', 'confirmed', or 'canceled'.")]
+    #[Groups(['booking:read:collection', 'booking:read:item', 'booking:write'])]
     private ?string $status = null;
 
     #[ORM\ManyToOne(targetEntity: WorkoutSession::class, inversedBy: 'bookings')]
@@ -41,13 +59,6 @@ class Booking
         return $this->id;
     }
 
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
     public function getUser(): ?User
     {
         return $this->user;
@@ -56,7 +67,6 @@ class Booking
     public function setUser(?User $user): static
     {
         $this->user = $user;
-
         return $this;
     }
 
@@ -68,7 +78,6 @@ class Booking
     public function setStatus(string $status): static
     {
         $this->status = $status;
-
         return $this;
     }
 
@@ -80,7 +89,6 @@ class Booking
     public function setWorkoutSession(?WorkoutSession $workoutSession): static
     {
         $this->workoutSession = $workoutSession;
-
         return $this;
     }
 }

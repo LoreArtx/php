@@ -1,14 +1,36 @@
-<?php
-
+<?php 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
 use App\Repository\WorkoutProgramRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
+#[ApiResource(
+    operations: [
+        new Get(
+            normalizationContext: ['groups' => ['workoutProgram:read:item']]
+        ),
+        new GetCollection(
+            normalizationContext: ['groups' => ['workoutProgram:read:collection']]
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['workoutProgram:write']]
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['workoutProgram:write']]
+        ),
+        new Delete()
+    ]
+)]
 #[ORM\Entity(repositoryClass: WorkoutProgramRepository::class)]
 class WorkoutProgram
 {
@@ -20,26 +42,31 @@ class WorkoutProgram
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Program name is required.")]
     #[Assert\Length(max: 255, maxMessage: "Program name cannot exceed 255 characters.")]
+    #[Groups(['workoutProgram:read:collection', 'workoutProgram:read:item', 'workoutProgram:write'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message: "Description is required.")]
     #[Assert\Length(max: 5000, maxMessage: "Description cannot exceed 5000 characters.")]
+    #[Groups(['workoutProgram:read:collection', 'workoutProgram:read:item', 'workoutProgram:write'])]
     private ?string $description = null;
 
     #[ORM\Column]
     #[Assert\NotBlank(message: "Duration is required.")]
     #[Assert\Positive(message: "Duration must be a positive integer.")]
+    #[Groups(['workoutProgram:read:item', 'workoutProgram:write'])]
     private ?int $duration = null;
 
     #[ORM\ManyToOne(inversedBy: 'workoutPrograms')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['workoutProgram:read:item', 'workoutProgram:write'])]
     private ?Trainer $trainer = null;
 
     /**
      * @var Collection<int, WorkoutSession>
      */
     #[ORM\OneToMany(targetEntity: WorkoutSession::class, mappedBy: 'program', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Groups(['workoutProgram:read:item'])]
     private Collection $workoutSessions;
 
     public function __construct()

@@ -2,133 +2,162 @@
 
 namespace App\Entity;
 
-use App\Repository\FeedbackRepository;
-use Doctrine\DBAL\Types\Types;
+use App\Repository\EquipmentRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Operation;
-use ApiPlatform\Metadata\Get;
-use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
-use ApiPlatform\Metadata\Delete;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ApiResource(
-    collectionOperations: [
-        'get' => [
-            'method' => 'GET',
-            'normalization_context' => ['groups' => ['get:collection:feedback']],
-        ],
-        'post' => [
-            'method' => 'POST',
-            'denormalization_context' => ['groups' => ['post:collection:feedback']],
-            'normalization_context' => ['groups' => ['get:collection:feedback']],
-        ]
-    ],
-    itemOperations: [
-        'get' => [
-            'method' => 'GET',
-            'normalization_context' => ['groups' => ['get:item:feedback']],
-        ],
-        'put' => [
-            'method' => 'PUT',
-            'denormalization_context' => ['groups' => ['put:item:feedback']],
-            'normalization_context' => ['groups' => ['get:item:feedback']],
-        ],
-        'delete' => [
-            'method' => 'DELETE',
-        ]
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['equipment:read:collection']]
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['equipment:write']]
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['equipment:read:item']]
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['equipment:write']]
+        ),
+        new Delete()
     ]
 )]
-#[ORM\Entity(repositoryClass: FeedbackRepository::class)]
-class Feedback
+#[ORM\Entity(repositoryClass: EquipmentRepository::class)]
+class Equipment
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'feedback')]
-    #[Assert\NotNull(message: "User must be specified.")]
-    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
-    private ?User $user = null;
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "Name cannot be blank.")]
+    #[Assert\Length(
+        min: 3,
+        minMessage: "Name must be at least 3 characters long.",
+        max: 255,
+        maxMessage: "Name cannot exceed 255 characters."
+    )]
+    #[Groups(['equipment:read:collection', 'equipment:read:item', 'equipment:write'])]
+    private ?string $name = null;
 
-    #[ORM\ManyToOne(inversedBy: 'feedback')]
-    #[Assert\NotNull(message: "Trainer must be specified.")]
-    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
-    private ?Trainer $trainer = null;
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "Type cannot be blank.")]
+    #[Assert\Length(
+        max: 255,
+        maxMessage: "Type cannot exceed 255 characters."
+    )]
+    #[Groups(['equipment:read:collection', 'equipment:read:item', 'equipment:write'])]
+    private ?string $type = null;
 
     #[ORM\Column(type: 'integer')]
-    #[Assert\NotNull(message: "Rating is required.")]
-    #[Assert\Range(
-        min: 1,
-        max: 5,
-        notInRangeMessage: "Rating must be between {{ min }} and {{ max }}."
-    )]
-    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
-    private ?int $rating = null;
+    #[Assert\NotBlank(message: "Quantity cannot be blank.")]
+    #[Assert\Positive(message: "Quantity must be positive.")]
+    #[Groups(['equipment:write'])]
+    private ?int $quantity = null;
 
-    #[ORM\Column(type: Types::TEXT)]
-    #[Assert\NotBlank(message: "Comment cannot be blank.")]
-    #[Assert\Length(
-        min: 10,
-        minMessage: "Comment must be at least {{ limit }} characters long."
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: "Status cannot be blank.")]
+    #[Assert\Choice(
+        choices: ['available', 'unavailable'],
+        message: "Status must be 'available' or 'unavailable'."
     )]
-    #[Groups(['get:collection:feedback', 'get:item:feedback', 'post:collection:feedback'])]
-    private ?string $comment = null;
+    #[Groups(['equipment:read:item', 'equipment:write'])]
+    private ?string $status = null;
+
+    /**
+     * @var Collection<int, WorkoutSession>
+     */
+    #[ORM\ManyToMany(targetEntity: WorkoutSession::class, mappedBy: 'equipment')]
+    private Collection $workoutSessions;
+
+    public function __construct()
+    {
+        $this->workoutSessions = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function setId(int $id): static
+    public function getName(): ?string
     {
-        $this->id = $id;
+        return $this->name;
+    }
+
+    public function setName(string $name): static
+    {
+        $this->name = $name;
+
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getType(): ?string
     {
-        return $this->user;
+        return $this->type;
     }
 
-    public function setUser(?User $user): static
+    public function setType(string $type): static
     {
-        $this->user = $user;
+        $this->type = $type;
+
         return $this;
     }
 
-    public function getTrainer(): ?Trainer
+    public function getQuantity(): ?int
     {
-        return $this->trainer;
+        return $this->quantity;
     }
 
-    public function setTrainer(?Trainer $trainer): static
+    public function setQuantity(int $quantity): static
     {
-        $this->trainer = $trainer;
+        $this->quantity = $quantity;
+
         return $this;
     }
 
-    public function getRating(): ?int
+    public function getStatus(): ?string
     {
-        return $this->rating;
+        return $this->status;
     }
 
-    public function setRating(int $rating): static
+    public function setStatus(string $status): static
     {
-        $this->rating = $rating;
+        $this->status = $status;
+
         return $this;
     }
 
-    public function getComment(): ?string
+    /**
+     * @return Collection<int, WorkoutSession>
+     */
+    public function getWorkoutSessions(): Collection
     {
-        return $this->comment;
+        return $this->workoutSessions;
     }
 
-    public function setComment(string $comment): static
+    public function addWorkoutSession(WorkoutSession $workoutSession): static
     {
-        $this->comment = $comment;
+        if (!$this->workoutSessions->contains($workoutSession)) {
+            $this->workoutSessions->add($workoutSession);
+            $workoutSession->addEquipment($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWorkoutSession(WorkoutSession $workoutSession): static
+    {
+        if ($this->workoutSessions->removeElement($workoutSession)) {
+            $workoutSession->removeEquipment($this);
+        }
+
         return $this;
     }
 }

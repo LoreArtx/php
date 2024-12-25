@@ -2,12 +2,34 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\GetCollection;
 use App\Repository\TrainerRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['trainer:read:collection']]
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['trainer:write']]
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['trainer:read:item']]
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['trainer:write']]
+        ),
+        new Delete()
+    ]
+)]
 #[ORM\Entity(repositoryClass: TrainerRepository::class)]
 class Trainer
 {
@@ -19,20 +41,24 @@ class Trainer
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Name is required.")]
     #[Assert\Length(max: 255, maxMessage: "Name cannot exceed 255 characters.")]
+    #[Groups(['trainer:read:collection', 'trainer:read:item', 'trainer:write'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Specialization is required.")]
+    #[Groups(['trainer:read:collection', 'trainer:read:item', 'trainer:write'])]
     private ?string $specialization = null;
 
     #[ORM\Column]
     #[Assert\NotNull(message: "Experience is required.")]
     #[Assert\PositiveOrZero(message: "Experience must be a positive number or zero.")]
+    #[Groups(['trainer:read:item', 'trainer:write'])]
     private ?int $experience = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Email is required.")]
     #[Assert\Email(message: "The email '{{ value }}' is not a valid email.")]
+    #[Groups(['trainer:read:item', 'trainer:write'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
@@ -41,23 +67,15 @@ class Trainer
         pattern: "/^\+?\d{10,15}$/",
         message: "Phone number must be valid and contain 10-15 digits."
     )]
+    #[Groups(['trainer:read:item', 'trainer:write'])]
     private ?string $phone = null;
 
-    /**
-     * @var Collection<int, WorkoutProgram>
-     */
     #[ORM\OneToMany(targetEntity: WorkoutProgram::class, mappedBy: 'trainer')]
     private Collection $workoutPrograms;
 
-    /**
-     * @var Collection<int, WorkoutSession>
-     */
     #[ORM\OneToMany(targetEntity: WorkoutSession::class, mappedBy: 'trainer')]
     private Collection $workoutSessions;
 
-    /**
-     * @var Collection<int, Feedback>
-     */
     #[ORM\OneToMany(targetEntity: Feedback::class, mappedBy: 'trainer')]
     private Collection $feedback;
 
@@ -73,13 +91,6 @@ class Trainer
         return $this->id;
     }
 
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
     public function getName(): ?string
     {
         return $this->name;
@@ -88,7 +99,6 @@ class Trainer
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -100,7 +110,6 @@ class Trainer
     public function setSpecialization(string $specialization): static
     {
         $this->specialization = $specialization;
-
         return $this;
     }
 
@@ -112,7 +121,6 @@ class Trainer
     public function setExperience(int $experience): static
     {
         $this->experience = $experience;
-
         return $this;
     }
 
@@ -124,7 +132,6 @@ class Trainer
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
@@ -136,13 +143,9 @@ class Trainer
     public function setPhone(string $phone): static
     {
         $this->phone = $phone;
-
         return $this;
     }
 
-    /**
-     * @return Collection<int, WorkoutProgram>
-     */
     public function getWorkoutPrograms(): Collection
     {
         return $this->workoutPrograms;
@@ -169,9 +172,6 @@ class Trainer
         return $this;
     }
 
-    /**
-     * @return Collection<int, WorkoutSession>
-     */
     public function getWorkoutSessions(): Collection
     {
         return $this->workoutSessions;
@@ -198,9 +198,6 @@ class Trainer
         return $this;
     }
 
-    /**
-     * @return Collection<int, Feedback>
-     */
     public function getFeedback(): Collection
     {
         return $this->feedback;

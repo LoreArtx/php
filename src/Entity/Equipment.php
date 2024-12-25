@@ -6,8 +6,27 @@ use App\Repository\EquipmentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['equipment:read:collection']]
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['equipment:write']]
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['equipment:read:item']]
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['equipment:write']]
+        ),
+        new Delete()
+    ]
+)]
 #[ORM\Entity(repositoryClass: EquipmentRepository::class)]
 class Equipment
 {
@@ -24,6 +43,7 @@ class Equipment
         max: 255,
         maxMessage: "Name cannot exceed 255 characters."
     )]
+    #[Groups(['equipment:read:collection', 'equipment:read:item', 'equipment:write'])]
     private ?string $name = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -32,11 +52,13 @@ class Equipment
         max: 255,
         maxMessage: "Type cannot exceed 255 characters."
     )]
+    #[Groups(['equipment:read:collection', 'equipment:read:item', 'equipment:write'])]
     private ?string $type = null;
 
     #[ORM\Column(type: 'integer')]
     #[Assert\NotBlank(message: "Quantity cannot be blank.")]
     #[Assert\Positive(message: "Quantity must be positive.")]
+    #[Groups(['equipment:write'])]
     private ?int $quantity = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -45,6 +67,7 @@ class Equipment
         choices: ['available', 'unavailable'],
         message: "Status must be 'available' or 'unavailable'."
     )]
+    #[Groups(['equipment:read:item', 'equipment:write'])]
     private ?string $status = null;
 
     /**
@@ -61,13 +84,6 @@ class Equipment
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getName(): ?string
