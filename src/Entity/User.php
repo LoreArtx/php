@@ -7,10 +7,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class User implements UserInterface,PasswordAuthenticatedUserInterface
 {
+    #[ORM\Column]
+    private array $roles = ['ROLE_USER'];
+
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -34,9 +40,9 @@ class User
     )]
     private ?string $phone = null;
 
-    #[ORM\Column(length: 255)]
-    #[Assert\Choice(choices: ['client', 'admin', 'trainer'], message: "Invalid role. Choose: client, admin, or trainer.")]
-    private ?string $role = null;
+    // #[ORM\Column(length: 255)]
+    // #[Assert\Choice(choices: ['client', 'admin', 'trainer'], message: "Invalid role. Choose: client, admin, or trainer.")]
+    // private ?string $role = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Password is required.")]
@@ -66,6 +72,20 @@ class User
         $this->payments = new ArrayCollection();
         $this->feedback = new ArrayCollection();
         $this->bookings = new ArrayCollection();
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles ?? [];
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+        return $this;
     }
 
     public function getId(): ?int
@@ -109,17 +129,17 @@ class User
         return $this;
     }
 
-    public function getRole(): ?string
-    {
-        return $this->role;
-    }
+    // public function getRole(): ?string
+    // {
+    //     return $this->role;
+    // }
 
-    public function setRole(string $role): static
-    {
-        $this->role = $role;
+    // public function setRole(string $role): static
+    // {
+    //     $this->role = $role;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     public function getPassword(): ?string
     {
@@ -218,5 +238,16 @@ class User
         }
 
         return $this;
+    }
+
+
+    public function eraseCredentials(): void
+    {
+        // Clear temporary sensitive data, e.g., plaintext password
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email; 
     }
 }

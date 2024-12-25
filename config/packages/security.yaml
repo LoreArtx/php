@@ -3,27 +3,106 @@ security:
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    
     providers:
         users_in_memory: { memory: null }
+
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
+        login:
+            pattern: ^/api/login
+            stateless: true
+            provider: app_user_provider
+            json_login:
+                check_path: /api/login
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+        api:
+            pattern: ^/api
+            stateless: true
+
         main:
             lazy: true
             provider: users_in_memory
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
-
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/user, roles: ROLE_ADMIN }
+        - { path: ^/workout/session, roles: ROLE_TRAINER }
+
+        - { path: ^/booking/new, roles: ROLE_USER }
+        - { path: ^/booking/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/booking/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/booking/{id}, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/booking, roles: IS_AUTHENTICATED_FULLY }
+
+
+        - { path: ^/equipment, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/equipment/new, roles: ROLE_ADMIN }
+        - { path: ^/equipment/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/equipment/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/equipment/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/feedback, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/feedback/new, roles: ROLE_ADMIN }
+        - { path: ^/feedback/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/feedback/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/feedback/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/membership, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/membership/new, roles: ROLE_ADMIN }
+        - { path: ^/membership/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/membership/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/membership/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/payment, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/payment/new, roles: ROLE_ADMIN }
+        - { path: ^/payment/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/payment/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/payment/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/subscription/plan, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/subscription/plan/new, roles: ROLE_ADMIN }
+        - { path: ^/subscription/plan/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/subscription/plan/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/subscription/plan/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/trainer, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/trainer/new, roles: ROLE_ADMIN }
+        - { path: ^/trainer/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/trainer/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/trainer/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/user, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/user/new, roles: ROLE_ADMIN }
+        - { path: ^/user/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/user/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/user/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/workout/program, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/workout/program/new, roles: ROLE_ADMIN }
+        - { path: ^/workout/program/{id}/edit, roles: ROLE_ADMIN }
+        - { path: ^/workout/program/{id}/delete, roles: ROLE_ADMIN }
+        - { path: ^/workout/program/{id}, roles: IS_AUTHENTICATED_FULLY }
+
+        - { path: ^/workout/session, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/workout/session/new, roles: ROLE_TRAINER }
+        - { path: ^/workout/session/{id}/edit, roles: ROLE_TRAINER }
+        - { path: ^/workout/session/{id}/delete, roles: ROLE_TRAINER }
+        - { path: ^/workout/session/{id}, roles: IS_AUTHENTICATED_FULLY }
+
 
 when@test:
     security:
